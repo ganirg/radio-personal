@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חפיצים: רדיו</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Playfair+Display:wght@700;900&family=Special+Elite&family=Inter:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.10/hls.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Each theme fills the viewport with a fixed grid */
+.theme-view {
+  display: none;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+}
+.theme-view.active { display: flex; }
+
+/* ── GLOBAL FIXED THEME SWITCHER ── */
+/* always sits in the same screen position across all themes, restyled per theme */
+#global-theme-switcher {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 950;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 5px;
+  border-radius: 8px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.gts-btn {
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+/* skin: newspaper */
+#global-theme-switcher.skin-a {
+  background: rgba(247,243,234,0.92);
+  border: 1px solid #1a1209;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+#global-theme-switcher.skin-a .gts-btn {
+  background: none;
+  border: 1px solid #ccc;
+  color: #888;
+  font-family: 'Libre Baskerville', serif;
+}
+#global-theme-switcher.skin-a .gts-btn:hover { border-color: #8b4513; color: #8b4513; }
+#global-theme-switcher.skin-a .gts-btn.active { background: #1a1209; border-color: #1a1209; color: #f7f3ea; }
+
+/* skin: bakelite */
+#global-theme-switcher.skin-b {
+  background: rgba(212,168,83,0.95);
+  border: 2px solid #7a5808;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+#global-theme-switcher.skin-b .gts-btn {
+  background: rgba(26,15,0,0.15);
+  border: 1px solid rgba(26,15,0,0.25);
+  color: rgba(26,15,0,0.6);
+  font-family: 'Special Elite', cursive;
+}
+#global-theme-switcher.skin-b .gts-btn:hover { background: rgba(26,15,0,0.25); color: #1a0f00; }
+#global-theme-switcher.skin-b .gts-btn.active { background: #1a0f00; border-color: #1a0f00; color: #d4a853; }
+
+/* skin: control room */
+#global-theme-switcher.skin-c {
+  background: rgba(42,32,24,0.95);
+  border: 1px solid #c8922a;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+#global-theme-switcher.skin-c .gts-btn {
+  background: none;
+  border: 1px solid #3a3020;
+  color: #555;
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+}
+#global-theme-switcher.skin-c .gts-btn:hover { border-color: #c8922a; color: #c8922a; }
+#global-theme-switcher.skin-c .gts-btn.active { background: #c8922a; border-color: #c8922a; color: #1a0f00; }
+
+@media (max-width: 480px) {
+  #global-theme-switcher { top: 8px; left: 8px; padding: 4px; gap: 3px; }
+  .gts-btn { padding: 4px 7px; font-size: 9px; }
+}
+
+/* ══════════════════════════════
+   THEME A — NEWSPAPER
+══════════════════════════════ */
+#theme-a { background: #f7f3ea; font-family: 'Libre Baskerville', serif; }
+
+.np-masthead {
+  background: #f7f3ea;
+  border-bottom: 5px double #1a1209;
+  padding: 14px 28px 10px;
+  flex-shrink: 0;
+}
+
+.np-masthead-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 6px;
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-left: 150px;
+}
+
+.np-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 44px;
+  font-weight: 900;
+  color: #1a1209;
+  text-align: center;
+  line-height: 1;
+}
+
+.np-subtitle {
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-top: 5px;
+  border-top: 1px solid #1a1209;
+  border-bottom: 1px solid #1a1209;
+  padding: 3px 0;
+}
+
+/* Newspaper theme switcher */
+.np-theme-btn {
+  background: none;
+  border: 1px solid #ccc;
+  color: #888;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.np-theme-btn:hover { border-color: #8b4513; color: #8b4513; }
+.np-theme-btn.active { background: #1a1209; border-color: #1a1209; color: #f7f3ea; }
+
+.np-clock-strip {
+  background: #1a1209;
+  color: #f7f3ea;
+  padding: 9px 28px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.np-clock-strip-inner {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.np-clock {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 30px;
+  font-weight: 600;
+  color: #d4a853;
+  line-height: 1;
+}
+
+.np-clock-meta { flex: 1; }
+.np-bulletin-label { font-size: 11px; color: #aaa; letter-spacing: 0.08em; margin-bottom: 4px; }
+.np-bulletin-label strong { color: #e8453c; }
+.np-prog-bar { height: 3px; background: #333; max-width: 260px; }
+.np-prog-fill { height: 100%; background: #e8453c; transition: width 1s linear; }
+.np-now-playing { font-size: 12px; color: #ccc; font-style: italic; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.np-body {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  min-height: 0;
+}
+
+.np-body-inner {
+  display: grid;
+  grid-template-columns: 1fr 210px;
+  width: 100%;
+  max-width: 1100px;
+  min-height: 0;
+}
+
+.np-schedule-col {
+  overflow-y: auto;
+  padding: 16px 24px;
+  border-left: 1px solid #ccc;
+}
+
+.np-col-head {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 2px solid #1a1209;
+  padding-bottom: 7px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.np-date-nav { display: flex; gap: 8px; align-items: center; }
+.np-nav-btn { background: none; border: 1px solid #ccc; color: #888; width: 22px; height: 22px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.np-nav-btn:hover { border-color: #8b4513; color: #8b4513; }
+.np-date-label { font-size: 11px; color: #444; min-width: 52px; text-align: center; }
+
+.np-slot { display: grid; grid-template-columns: 50px 1fr auto; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px dashed #d5cfc4; cursor: pointer; transition: background 0.15s; }
+.np-slot:hover { background: #fff8f0; }
+.np-slot.active { background: #fff8e8; }
+.np-slot.past { opacity: 0.4; }
+.np-slot-time { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: #1a1209; }
+.np-slot.active .np-slot-time { color: #8b4513; }
+.np-slot-info { min-width: 0; }
+.np-slot-name { font-size: 14px; color: #2a2015; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.np-slot-name.empty { color: #bbb; font-style: italic; font-size: 13px; }
+.np-slot-type { font-size: 10px; color: #999; font-style: italic; margin-top: 1px; }
+.np-slot-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.np-slot:hover .np-slot-actions { opacity: 1; }
+.np-slot-btn { background: none; border: 1px solid #ccc; color: #888; width: 22px; height: 22px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.np-slot-btn:hover { border-color: #8b4513; color: #8b4513; }
+.np-slot-btn.del:hover { border-color: #c0392b; color: #c0392b; }
+
+.np-sidebar { background: #f0ebe0; border-right: 1px solid #ccc; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.np-sidebar-head { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 8px; }
+.np-search-input { width: 100%; background: #fff; border: 1px solid #ccc; padding: 7px 10px; font-family: 'Libre Baskerville', serif; font-size: 13px; color: #1a1209; outline: none; direction: rtl; transition: border-color 0.15s; }
+.np-search-input:focus { border-color: #8b4513; }
+.np-search-input::placeholder { color: #bbb; font-style: italic; }
+.np-podcast-result { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px dotted #ccc; cursor: pointer; }
+.np-podcast-result:hover .np-pr-name { color: #8b4513; }
+.np-pr-art { width: 34px; height: 34px; object-fit: cover; border: 1px solid #ccc; flex-shrink: 0; }
+.np-pr-info { flex: 1; min-width: 0; }
+.np-pr-name { font-size: 12px; color: #2a2015; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.15s; }
+.np-pr-author { font-size: 10px; color: #888; font-style: italic; }
+.np-pr-add { background: none; border: 1px solid #ccc; color: #888; width: 20px; height: 20px; cursor: pointer; font-size: 13px; flex-shrink: 0; transition: all 0.15s; }
+.np-pr-add:hover { border-color: #8b4513; color: #8b4513; }
+.np-news-box { border: 1px solid #8b4513; padding: 10px; background: #fff8e8; }
+.np-news-head { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #8b4513; font-weight: 700; margin-bottom: 5px; }
+.np-news-source { font-size: 12px; color: #444; line-height: 1.5; }
+.np-news-prog { height: 3px; background: #e8d5b8; margin-top: 7px; }
+.np-news-prog-fill { height: 100%; background: #8b4513; transition: width 1s linear; }
+
+.np-player-bar { border-top: 3px double #1a1209; background: #f0ebe0; padding: 11px 24px; display: flex; justify-content: center; flex-shrink: 0; }
+.np-player-bar-inner { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 1100px; }
+.np-station-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.np-station-chip { font-size: 11px; padding: 5px 10px; border: 1px solid #ccc; border-radius: 14px; color: #555; cursor: pointer; background: #fff; transition: all 0.15s; }
+.np-station-chip:hover { border-color: #8b4513; color: #8b4513; }
+.np-play-btn { width: 36px; height: 36px; background: #1a1209; color: #f7f3ea; border: none; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
+.np-play-btn:hover { background: #8b4513; }
+.np-player-info { flex: 1; min-width: 0; }
+.np-player-track { font-size: 14px; color: #1a1209; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-player-source { font-size: 11px; color: #888; font-style: italic; margin-top: 1px; }
+.np-news-now-btn { border: 1px solid #8b4513; color: #8b4513; background: none; padding: 6px 12px; font-size: 11px; font-family: 'Libre Baskerville', serif; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.np-news-now-btn:hover { background: #8b4513; color: #fff; }
+
+.np-credit { background: #ede8db; border-top: 1px solid #ccc; padding: 5px 24px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.np-credit img { height: 13px; opacity: 0.75; }
+.np-credit span { font-size: 10px; color: #999; letter-spacing: 0.04em; }
+
+
+/* ══════════════════════════════
+   THEME B — BAKELITE
+══════════════════════════════ */
+#theme-b { background: #ddd0b8; font-family: 'Special Elite', cursive; }
+
+.bk-inner { background: #e8dcc8; border: 3px solid #b8a888; border-radius: 12px; margin: 20px auto; max-width: 1100px; width: calc(100% - 40px); display: flex; flex-direction: column; flex: 1; min-height: 0; box-shadow: 0 8px 40px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.4); overflow: hidden; }
+
+.bk-header {
+  background: linear-gradient(180deg, #d4a853 0%, #b08020 100%);
+  padding: 15px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 4px solid #7a5808;
+  flex-shrink: 0;
+}
+
+.bk-brand-name { font-size: 22px; color: #1a0f00; letter-spacing: 0.08em; }
+.bk-brand-sub { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(26,15,0,0.6); margin-top: 2px; }
+.bk-clock { font-family: 'IBM Plex Mono', monospace; font-size: 42px; font-weight: 600; color: #1a0f00; line-height: 1; }
+
+/* Bakelite theme switcher */
+.bk-theme-btn { background: rgba(26,15,0,0.15); border: 1px solid rgba(26,15,0,0.25); color: rgba(26,15,0,0.5); font-family: 'Special Elite', cursive; font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all 0.15s; }
+.bk-theme-btn:hover { background: rgba(26,15,0,0.25); color: #1a0f00; }
+.bk-theme-btn.active { background: #1a0f00; border-color: #1a0f00; color: #d4a853; }
+
+.bk-dial-strip { background: #f5ede0; border-bottom: 2px solid #b8a888; padding: 12px 24px; flex-shrink: 0; }
+.bk-dial-track { height: 38px; background: #fff8f0; border: 2px inset #c8b898; border-radius: 3px; position: relative; overflow: visible; }
+.bk-dial-marks { display: flex; justify-content: space-between; align-items: flex-end; height: 100%; padding: 0 14px 5px; }
+.bk-mark { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bk-mark-line { width: 1px; background: #8b6010; }
+.bk-mark-line.tall { height: 14px; opacity: 0.8; }
+.bk-mark-line.short { height: 8px; opacity: 0.4; }
+.bk-mark-num { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #6b4a10; }
+.bk-needle { position: absolute; top: -6px; bottom: -6px; left: 38%; width: 2px; background: #cc2200; box-shadow: 0 0 6px rgba(200,0,0,0.5); transition: left 0.5s ease; }
+.bk-needle::before { content: '▼'; position: absolute; bottom: -13px; left: 50%; transform: translateX(-50%); color: #cc2200; font-size: 10px; }
+.bk-needle::after { content: '▲'; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); color: #cc2200; font-size: 10px; }
+.bk-bulletin-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 7px; font-size: 11px; color: #8b6010; }
+.bk-bulletin-row strong { color: #cc2200; }
+.bk-prog-inline { flex: 1; height: 3px; background: #d5c8b0; max-width: 180px; border-radius: 2px; overflow: hidden; }
+.bk-prog-inline-fill { height: 100%; background: #cc2200; transition: width 1s linear; }
+
+.bk-body { display: grid; grid-template-columns: 1fr 260px; flex: 1; min-height: 0; }
+.bk-schedule { overflow-y: auto; padding: 16px 20px; }
+.bk-section-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #8b6010; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.bk-date-nav { display: flex; gap: 7px; align-items: center; }
+.bk-nav-btn { background: #d4a853; border: none; color: #1a0f00; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.bk-date-label { font-size: 10px; color: #6b4a10; min-width: 52px; text-align: center; }
+.bk-slot { display: flex; gap: 10px; align-items: center; padding: 8px 8px; border-radius: 4px; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+.bk-slot:hover { background: #fff8e8; border-color: #d4a853; }
+.bk-slot.active { background: #fff8e8; border-color: #d4a853; box-shadow: inset 3px 0 0 #d4a853; }
+.bk-slot.past { opacity: 0.4; }
+.bk-slot-time { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; color: #4a3010; min-width: 46px; }
+.bk-slot.active .bk-slot-time { color: #8b4513; }
+.bk-slot-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.15); }
+.bk-slot-name { font-size: 14px; color: #2a1a08; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-slot-name.empty { color: #bba888; font-style: italic; }
+.bk-slot-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.bk-slot:hover .bk-slot-actions { opacity: 1; }
+.bk-slot-btn { background: none; border: 1px solid #c8b898; color: #8b6010; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 3px; transition: all 0.15s; }
+.bk-slot-btn:hover { border-color: #8b4513; color: #8b4513; }
+.bk-slot-btn.del:hover { border-color: #c0392b; color: #c0392b; }
+
+.bk-panel { background: #ddd0b8; border-right: 2px solid #c8b898; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.bk-station-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bk-station-chip { font-size: 11px; padding: 5px 10px; border: 1px solid #c8b898; border-radius: 14px; color: #6b4a10; cursor: pointer; background: #f5ede0; transition: all 0.15s; }
+.bk-station-chip:hover { border-color: #8b4513; color: #8b4513; }
+.bk-panel-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #8b6010; margin-bottom: 7px; }
+.bk-knob-row { display: flex; justify-content: space-around; }
+.bk-knob { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bk-knob-circle { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #5a4020, #2a1a08); border: 3px solid #8b6010; box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1); position: relative; }
+.bk-knob-circle::after { content: ''; position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 2px; height: 10px; background: #d4a853; border-radius: 1px; }
+.bk-knob-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #6b4a10; }
+.bk-search-input { width: 100%; background: #f5ede0; border: 1px solid #c8b898; border-radius: 3px; padding: 7px 9px; font-family: 'Special Elite', cursive; font-size: 12px; color: #2a1a08; outline: none; direction: rtl; transition: border-color 0.15s; }
+.bk-search-input:focus { border-color: #8b6010; }
+.bk-search-input::placeholder { color: #bba888; }
+.bk-podcast-result { display: flex; gap: 7px; align-items: center; padding: 6px 0; border-bottom: 1px dotted #c8b898; cursor: pointer; }
+.bk-podcast-result:hover .bk-pr-name { color: #8b4513; }
+.bk-pr-art { width: 32px; height: 32px; object-fit: cover; border-radius: 3px; border: 1px solid #c8b898; flex-shrink: 0; }
+.bk-pr-info { flex: 1; min-width: 0; }
+.bk-pr-name { font-size: 11px; color: #2a1a08; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; }
+.bk-pr-author { font-size: 9px; color: #8b6010; }
+.bk-news-indicator { background: #1a0f00; border-radius: 4px; padding: 11px; text-align: center; }
+.bk-news-light { width: 11px; height: 11px; border-radius: 50%; background: #cc2200; margin: 0 auto 5px; box-shadow: 0 0 10px #cc2200, 0 0 20px rgba(200,0,0,0.3); }
+.bk-news-text { font-size: 9px; color: #d4a853; letter-spacing: 0.12em; text-transform: uppercase; }
+.bk-news-time-val { font-family: 'IBM Plex Mono', monospace; font-size: 17px; color: #f5e8c8; margin-top: 3px; }
+.bk-news-src { font-size: 9px; color: #555; margin-top: 2px; }
+
+.bk-player { background: linear-gradient(180deg, #c8b898 0%, #b8a888 100%); border-top: 4px solid #8b6010; padding: 12px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.bk-play-btn { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #5a4020, #2a1a08); border: 2px solid #8b6010; color: #d4a853; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.3); transition: transform 0.1s; }
+.bk-play-btn:hover { transform: scale(1.05); }
+.bk-player-info { flex: 1; min-width: 0; }
+.bk-player-track { font-size: 14px; color: #1a0f00; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-player-source { font-size: 10px; color: #6b4a10; margin-top: 2px; }
+.bk-news-now-btn { background: #8b4513; color: #f5e8c8; border: none; padding: 7px 13px; border-radius: 4px; font-size: 11px; font-family: 'Special Elite', cursive; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: background 0.15s; }
+.bk-news-now-btn:hover { background: #a0522d; }
+
+.bk-credit { background: #ddd0b8; border-top: 2px solid #8b6010; padding: 5px 20px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.bk-credit img { height: 13px; opacity: 0.7; }
+.bk-credit span { font-size: 10px; color: #8b6010; opacity: 0.7; }
+
+
+/* ══════════════════════════════
+   THEME C — CONTROL ROOM
+══════════════════════════════ */
+#theme-c { background: #1a1410; font-family: 'IBM Plex Mono', monospace; }
+
+.cr-header { background: #2a2018; padding: 13px 24px 13px 210px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #c8922a; flex-shrink: 0; }
+.cr-logo-name { font-size: 15px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #c8922a; }
+.cr-logo-sub { font-size: 8px; color: rgba(200,146,42,0.45); letter-spacing: 0.15em; margin-top: 2px; }
+.cr-status-row { display: flex; gap: 18px; align-items: center; }
+.cr-status-item { text-align: center; }
+.cr-status-val { font-size: 22px; font-weight: 600; color: #c8922a; line-height: 1; }
+.cr-status-val.red { color: #cc2200; }
+.cr-status-label { font-size: 8px; color: #555; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; }
+.cr-divider { width: 1px; height: 32px; background: #3a3020; }
+
+/* Control room theme switcher */
+.cr-theme-btn { background: none; border: 1px solid #3a3020; color: #555; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 9px; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+.cr-theme-btn:hover { border-color: #c8922a; color: #c8922a; }
+.cr-theme-btn.active { background: #c8922a; border-color: #c8922a; color: #1a0f00; }
+
+.cr-vu-strip { background: #1a1410; padding: 8px 24px; display: flex; align-items: flex-end; gap: 3px; height: 42px; border-bottom: 2px solid #c8922a; flex-shrink: 0; }
+.cr-vu-bar { flex: 1; background: #0f1a0f; border-radius: 1px; height: 24px; position: relative; overflow: hidden; }
+.cr-vu-fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: 1px; transition: height 0.1s; }
+.cr-vu-label { font-size: 8px; color: #444; letter-spacing: 0.1em; margin-right: 8px; align-self: center; padding-bottom: 3px; }
+
+.cr-body { display: flex; justify-content: center; flex: 1; min-height: 0; }
+.cr-body-inner { display: grid; grid-template-columns: 1fr 260px; width: 100%; max-width: 1100px; min-height: 0; }
+.cr-schedule { overflow-y: auto; padding: 16px 20px; border-left: 1px solid #2a2018; }
+.cr-section-label { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #c8922a; padding-bottom: 7px; border-bottom: 1px solid #2a2018; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.cr-date-nav { display: flex; gap: 7px; align-items: center; }
+.cr-nav-btn { background: #2a2018; border: 1px solid #3a3020; color: #c8922a; width: 20px; height: 20px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; border-radius: 2px; transition: border-color 0.15s; }
+.cr-nav-btn:hover { border-color: #c8922a; }
+.cr-date-label { font-size: 9px; color: #777; min-width: 52px; text-align: center; }
+.cr-slot { display: grid; grid-template-columns: 50px 10px 1fr 56px auto; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 2px; margin-bottom: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+.cr-slot:hover { background: #2a2018; border-color: #3a3020; }
+.cr-slot.active { background: #2a2018; border-color: #c8922a; border-right: 3px solid #c8922a; }
+.cr-slot.past { opacity: 0.38; }
+.cr-slot-time { font-size: 14px; font-weight: 600; color: #666; }
+.cr-slot.active .cr-slot-time { color: #c8922a; }
+.cr-slot-led { width: 8px; height: 8px; border-radius: 1px; }
+.cr-slot-name { font-size: 13px; color: #c8bfb0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-slot-name.empty { color: #2a2018; }
+.cr-slot-dur { font-size: 9px; color: #444; letter-spacing: 0.04em; text-align: left; }
+.cr-slot.active .cr-slot-dur { color: #c8922a; }
+.cr-slot-actions { display: flex; gap: 3px; opacity: 0; transition: opacity 0.15s; }
+.cr-slot:hover .cr-slot-actions { opacity: 1; }
+.cr-slot-btn { background: none; border: 1px solid #3a3020; color: #444; width: 20px; height: 20px; cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 2px; transition: all 0.15s; }
+.cr-slot-btn:hover { border-color: #c8922a; color: #c8922a; }
+.cr-slot-btn.del:hover { border-color: #cc2200; color: #cc2200; }
+
+.cr-panel { background: #222018; border-right: 1px solid #2a2018; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.cr-station-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cr-station-chip { font-size: 10px; padding: 5px 10px; border: 1px solid #3a3020; border-radius: 14px; color: #888; cursor: pointer; background: #1a1410; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; }
+.cr-station-chip:hover { border-color: #c8922a; color: #c8922a; }
+.cr-panel-label { font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #c8922a; margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px solid #2a2018; }
+.cr-search-input { width: 100%; background: #1a1410; border: 1px solid #2a2018; color: #c8bfb0; padding: 7px 9px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; outline: none; direction: rtl; border-radius: 2px; transition: border-color 0.15s; }
+.cr-search-input:focus { border-color: #c8922a; }
+.cr-search-input::placeholder { color: #333; }
+.cr-patch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.cr-patch-btn { background: #1a1410; border: 1px solid #2a2018; border-radius: 2px; padding: 7px 5px; text-align: center; cursor: pointer; transition: all 0.15s; }
+.cr-patch-btn:hover { border-color: #c8922a; }
+.cr-patch-btn.active { background: #c8922a; border-color: #c8922a; }
+.cr-patch-label { font-size: 8px; color: #555; letter-spacing: 0.08em; }
+.cr-patch-btn.active .cr-patch-label { color: #1a0f00; }
+.cr-podcast-result { display: flex; gap: 7px; align-items: center; padding: 6px 0; border-bottom: 1px solid #2a2018; cursor: pointer; }
+.cr-podcast-result:hover .cr-pr-name { color: #c8922a; }
+.cr-pr-art { width: 32px; height: 32px; object-fit: cover; border-radius: 2px; border: 1px solid #2a2018; flex-shrink: 0; }
+.cr-pr-info { flex: 1; min-width: 0; }
+.cr-pr-name { font-size: 11px; color: #c8bfb0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; }
+.cr-pr-author { font-size: 9px; color: #444; }
+.cr-news-block { background: #1a0f00; border-radius: 2px; padding: 11px; border-right: 3px solid #cc2200; }
+.cr-news-label { font-size: 8px; color: #cc2200; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+.cr-news-dot { width: 6px; height: 6px; border-radius: 50%; background: #cc2200; box-shadow: 0 0 6px #cc2200; }
+.cr-news-val { font-size: 20px; color: #c8922a; }
+.cr-news-sub { font-size: 8px; color: #444; margin-top: 2px; }
+
+.cr-player { background: #2a2018; border-top: 4px solid #c8922a; padding: 11px 20px; display: flex; justify-content: center; flex-shrink: 0; }
+.cr-player-inner { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 1100px; }
+.cr-play-btn { width: 36px; height: 36px; background: #c8922a; border: none; border-radius: 2px; color: #1a0f00; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: background 0.15s; }
+.cr-play-btn:hover { background: #d4a030; }
+.cr-player-info { flex: 1; min-width: 0; }
+.cr-player-track { font-size: 12px; color: #f5e8c8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-player-source { font-size: 9px; color: #555; margin-top: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+.cr-news-now-btn { background: none; border: 1px solid #cc2200; color: #cc2200; padding: 6px 12px; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; border-radius: 2px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.cr-news-now-btn:hover { background: #cc2200; color: #fff; }
+
+.cr-credit { background: #1a1410; border-top: 1px solid #2a2018; padding: 4px 20px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; }
+.cr-credit img { height: 12px; opacity: 0.6; }
+.cr-credit span { font-size: 9px; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
+
+
+/* ── MODAL ── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 998; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-box { width: 360px; max-width: 90vw; border-radius: 6px; overflow: hidden; }
+.modal-box.theme-a { background: #f7f3ea; border: 2px solid #1a1209; font-family: 'Libre Baskerville', serif; }
+.modal-box.theme-b { background: #e8dcc8; border: 2px solid #8b6010; font-family: 'Special Elite', cursive; }
+.modal-box.theme-c { background: #2a2018; border: 1px solid #c8922a; font-family: 'IBM Plex Mono', monospace; }
+.modal-head { padding: 13px 17px; border-bottom: 1px solid; display: flex; justify-content: space-between; align-items: center; }
+.theme-a .modal-head { border-color: #ddd; background: #f0ebe0; }
+.theme-b .modal-head { border-color: #8b6010; background: #ddd0b8; }
+.theme-c .modal-head { border-color: #3a3020; background: #1a1410; }
+.modal-title { font-size: 12px; letter-spacing: 0.08em; }
+.theme-a .modal-title { color: #888; text-transform: uppercase; font-size: 10px; }
+.theme-b .modal-title { color: #6b4a10; }
+.theme-c .modal-title { color: #c8922a; text-transform: uppercase; font-size: 9px; letter-spacing: 0.2em; }
+.modal-slot-time { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 600; }
+.theme-a .modal-slot-time { color: #8b4513; }
+.theme-b .modal-slot-time { color: #d4a853; }
+.theme-c .modal-slot-time { color: #c8922a; }
+.modal-body { padding: 14px 17px; }
+.modal-type-row { display: flex; gap: 7px; margin-bottom: 13px; }
+.modal-type-btn { flex: 1; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px; letter-spacing: 0.06em; text-align: center; transition: all 0.15s; }
+.theme-a .modal-type-btn { background: #f0ebe0; border: 1px solid #ccc; color: #888; font-family: 'Libre Baskerville', serif; }
+.theme-a .modal-type-btn.active-spotify { border-color: #1db954; color: #1db954; background: rgba(29,185,84,0.06); }
+.theme-a .modal-type-btn.active-podcast { border-color: #8b4513; color: #8b4513; background: rgba(139,69,19,0.06); }
+.theme-b .modal-type-btn { background: #ddd0b8; border: 1px solid #c8b898; color: #8b6010; font-family: 'Special Elite', cursive; }
+.theme-b .modal-type-btn.active-spotify { border-color: #1db954; color: #1db954; }
+.theme-b .modal-type-btn.active-podcast { border-color: #d4a853; color: #d4a853; background: rgba(212,168,83,0.1); }
+.theme-c .modal-type-btn { background: #1a1410; border: 1px solid #3a3020; color: #444; font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase; border-radius: 2px; }
+.theme-c .modal-type-btn.active-spotify { border-color: #1db954; color: #1db954; }
+.theme-a .modal-type-btn.active-radio { border-color: #1a6b8b; color: #1a6b8b; background: rgba(26,107,139,0.06); }
+.theme-b .modal-type-btn.active-radio { border-color: #1a6b8b; color: #1a6b8b; }
+.theme-c .modal-type-btn.active-radio { border-color: #1a8bc8; color: #1a8bc8; }
+.modal-search { width: 100%; padding: 8px 10px; font-size: 13px; outline: none; direction: rtl; text-align: right; border-radius: 4px; transition: border-color 0.15s; margin-bottom: 9px; }
+.theme-a .modal-search { background: #fff; border: 1px solid #ccc; font-family: 'Libre Baskerville', serif; color: #1a1209; }
+.theme-a .modal-search:focus { border-color: #8b4513; }
+.theme-b .modal-search { background: #f5ede0; border: 1px solid #c8b898; font-family: 'Special Elite', cursive; color: #2a1a08; }
+.theme-b .modal-search:focus { border-color: #8b6010; }
+.theme-c .modal-search { background: #1a1410; border: 1px solid #2a2018; font-family: 'IBM Plex Mono', monospace; color: #c8bfb0; border-radius: 2px; }
+.theme-c .modal-search:focus { border-color: #c8922a; }
+.modal-search::placeholder { color: #aaa; }
+.theme-c .modal-search::placeholder { color: #333; }
+.modal-results { max-height: 190px; overflow-y: auto; }
+.modal-result { display: flex; gap: 8px; align-items: center; padding: 7px 0; cursor: pointer; border-bottom: 1px solid; transition: all 0.15s; }
+.theme-a .modal-result { border-color: #e8e0d0; }
+.theme-a .modal-result:hover .modal-result-name { color: #8b4513; }
+.theme-b .modal-result { border-color: #c8b898; }
+.theme-b .modal-result:hover .modal-result-name { color: #8b4513; }
+.theme-c .modal-result { border-color: #2a2018; }
+.theme-c .modal-result:hover .modal-result-name { color: #c8922a; }
+.modal-result-art { width: 34px; height: 34px; object-fit: cover; flex-shrink: 0; border-radius: 2px; }
+.modal-result-info { flex: 1; min-width: 0; }
+.modal-result-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; }
+.modal-result-author { font-size: 10px; margin-top: 1px; }
+.theme-a .modal-result-name { color: #2a2015; }
+.theme-a .modal-result-author { color: #888; font-style: italic; }
+.theme-b .modal-result-name { color: #2a1a08; }
+.theme-b .modal-result-author { color: #8b6010; }
+.theme-c .modal-result-name { color: #c8bfb0; }
+.theme-c .modal-result-author { color: #444; }
+.modal-result-sel { font-size: 10px; padding: 3px 7px; border-radius: 3px; border: none; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+.theme-a .modal-result-sel { background: #f0ebe0; border: 1px solid #ccc; color: #888; }
+.theme-a .modal-result-sel:hover, .theme-a .modal-result-sel.selected { border-color: #8b4513; color: #8b4513; }
+.theme-b .modal-result-sel { background: #ddd0b8; border: 1px solid #c8b898; color: #8b6010; }
+.theme-b .modal-result-sel:hover, .theme-b .modal-result-sel.selected { border-color: #d4a853; color: #d4a853; }
+.theme-c .modal-result-sel { background: #1a1410; border: 1px solid #3a3020; color: #444; }
+.theme-c .modal-result-sel:hover, .theme-c .modal-result-sel.selected { border-color: #c8922a; color: #c8922a; }
+.modal-footer { padding: 11px 17px; border-top: 1px solid; display: flex; gap: 7px; }
+.theme-a .modal-footer { border-color: #e8e0d0; background: #f0ebe0; }
+.theme-b .modal-footer { border-color: #c8b898; background: #ddd0b8; }
+.theme-c .modal-footer { border-color: #3a3020; background: #1a1410; }
+.modal-save { flex: 1; padding: 9px; border: none; cursor: pointer; font-size: 12px; letter-spacing: 0.07em; border-radius: 4px; transition: all 0.15s; }
+.theme-a .modal-save { background: #1a1209; color: #f7f3ea; font-family: 'Libre Baskerville', serif; }
+.theme-a .modal-save:hover { background: #8b4513; }
+.theme-b .modal-save { background: #d4a853; color: #1a0f00; font-family: 'Special Elite', cursive; }
+.theme-b .modal-save:hover { background: #e0b860; }
+.theme-c .modal-save { background: #c8922a; color: #1a0f00; font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; border-radius: 2px; }
+.theme-c .modal-save:hover { background: #d4a030; }
+.modal-cancel { padding: 9px 14px; background: none; cursor: pointer; font-size: 12px; border-radius: 4px; transition: all 0.15s; }
+.theme-a .modal-cancel { border: 1px solid #ccc; color: #888; font-family: 'Libre Baskerville', serif; }
+.theme-a .modal-cancel:hover { border-color: #888; color: #444; }
+.theme-b .modal-cancel { border: 1px solid #c8b898; color: #8b6010; font-family: 'Special Elite', cursive; }
+.theme-b .modal-cancel:hover { border-color: #8b6010; }
+.theme-c .modal-cancel { border: 1px solid #2a2018; color: #444; font-family: 'IBM Plex Mono', monospace; font-size: 10px; border-radius: 2px; }
+.theme-c .modal-cancel:hover { border-color: #555; color: #888; }
+
+.empty-hint { font-size: 12px; text-align: center; padding: 18px 0; line-height: 1.6; }
+.theme-a .empty-hint { color: #bbb; font-style: italic; }
+.theme-b .empty-hint { color: #bba888; }
+.theme-c .empty-hint { color: #333; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { border-radius: 2px; }
+#theme-a ::-webkit-scrollbar-thumb { background: #ccc; }
+#theme-b ::-webkit-scrollbar-thumb { background: #c8b898; }
+#theme-c ::-webkit-scrollbar-thumb { background: #3a3020; }
+
+/* ══════════════════════════════
+   MOBILE LAYOUT (≤720px)
+   Sidebars are removed from the main view;
+   the schedule takes the full width, and a
+   floating action button opens a bottom sheet
+   with the same content (search / radio / news).
+══════════════════════════════ */
+.fab {
+  display: none;
+  position: fixed;
+  bottom: 78px;
+  left: 16px;
+  z-index: 500;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: none;
+  font-size: 22px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+.fab.theme-a { background: #1a1209; color: #d4a853; }
+.fab.theme-b { background: radial-gradient(circle at 35% 35%, #5a4020, #2a1a08); color: #d4a853; border: 2px solid #8b6010; }
+.fab.theme-c { background: #c8922a; color: #1a0f00; }
+
+.sheet-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 900;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet-overlay.open { display: flex; }
+
+.sheet {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.25);
+}
+.sheet.theme-a { background: #f0ebe0; font-family: 'Libre Baskerville', serif; }
+.sheet.theme-b { background: #ddd0b8; font-family: 'Special Elite', cursive; }
+.sheet.theme-c { background: #222018; font-family: 'IBM Plex Mono', monospace; }
+
+.sheet-handle { width: 36px; height: 4px; border-radius: 2px; margin: 0 auto 4px; flex-shrink: 0; }
+.theme-a .sheet-handle { background: #ccc; }
+.theme-b .sheet-handle { background: #b8a888; }
+.theme-c .sheet-handle { background: #3a3020; }
+
+.sheet-tabs { display: flex; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid; flex-shrink: 0; }
+.theme-a .sheet-tabs { border-color: #ccc; }
+.theme-b .sheet-tabs { border-color: #c8b898; }
+.theme-c .sheet-tabs { border-color: #3a3020; }
+
+.sheet-tab { flex: 1; text-align: center; padding: 8px; font-size: 11px; border-radius: 6px; cursor: pointer; border: 1px solid; background: none; }
+.theme-a .sheet-tab { border-color: #ccc; color: #888; font-family: 'Libre Baskerville', serif; }
+.theme-a .sheet-tab.active { background: #1a1209; border-color: #1a1209; color: #f7f3ea; }
+.theme-b .sheet-tab { border-color: #c8b898; color: #6b4a10; font-family: 'Special Elite', cursive; }
+.theme-b .sheet-tab.active { background: #1a0f00; border-color: #1a0f00; color: #d4a853; }
+.theme-c .sheet-tab { border-color: #3a3020; color: #666; font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }
+.theme-c .sheet-tab.active { background: #c8922a; border-color: #c8922a; color: #1a0f00; }
+
+.sheet-pane { display: none; flex-direction: column; gap: 10px; }
+.sheet-pane.active { display: flex; }
+
+@media (max-width: 720px) {
+  /* hide the desktop sidebars entirely */
+  .np-sidebar, .bk-panel, .cr-panel { display: none; }
+
+  /* schedule takes full width */
+  .np-body-inner, .bk-body, .cr-body-inner { grid-template-columns: 1fr; }
+
+  /* show the floating action button */
+  .fab { display: flex; }
+
+  /* tighten a few paddings on small screens */
+  .np-schedule-col, .bk-schedule, .cr-schedule { padding-left: 12px; padding-right: 12px; border-left: none; }
+  .np-title { font-size: 32px; }
+  .bk-clock, .np-clock { font-size: 24px; }
+
+  /* control room header: stack vertically to avoid colliding with the fixed theme switcher */
+  .cr-header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 50px 16px 13px; }
+  .cr-status-row { align-self: stretch; justify-content: space-between; }
+}
+</style>
+</head>
+<body>
+
+<div id="global-theme-switcher" class="skin-a">
+  <button class="gts-btn active" id="gts-a" onclick="setTheme('a')">עיתון</button>
+  <button class="gts-btn" id="gts-b" onclick="setTheme('b')">בקלייט</button>
+  <button class="gts-btn" id="gts-c" onclick="setTheme('c')">סטודיו</button>
+</div>
+
+<!-- MOBILE: floating action button + bottom sheet (search / radio / news) -->
+<button class="fab theme-a" id="mobile-fab" onclick="openSheet()">⚡</button>
+<div class="sheet-overlay" id="sheet-overlay" onclick="if(event.target===this) closeSheet()">
+  <div class="sheet theme-a" id="mobile-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-tabs">
+      <button class="sheet-tab active" id="sheet-tab-search" onclick="switchSheetTab('search')">חיפוש</button>
+      <button class="sheet-tab" id="sheet-tab-radio" onclick="switchSheetTab('radio')">רדיו</button>
+      <button class="sheet-tab" id="sheet-tab-news" onclick="switchSheetTab('news')">חדשות</button>
+    </div>
+    <div class="sheet-pane active" id="sheet-pane-search">
+      <input class="np-search-input" type="text" placeholder="חפש פודקאסט..." oninput="debSearch(this.value,'sheet-sr','sheet')">
+      <div id="sheet-sr"><div class="empty-hint theme-a">הקלד לחיפוש</div></div>
+    </div>
+    <div class="sheet-pane" id="sheet-pane-radio">
+      <div class="np-station-chips" id="sheet-station-chips"></div>
+    </div>
+    <div class="sheet-pane" id="sheet-pane-news">
+      <div class="np-news-box">
+        <div class="np-news-head">📡 כאן רשת ב׳</div>
+        <div class="np-news-source">הבא בעוד <strong id="sheet-news-cd">--</strong> דקות</div>
+      </div>
+      <button class="np-news-now-btn" onclick="playNews(); closeSheet()" style="width:100%;text-align:center">📡 חדשות עכשיו</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ THEME A ════ -->
+<div class="theme-view active" id="theme-a">
+  <div class="np-masthead">
+    <div class="np-masthead-top">
+      <div id="np-date-str"></div>
+      <div>Vol. I — חפיצים: רדיו</div>
+    </div>
+    <div class="np-title">חפיצים: רדיו</div>
+    <div class="np-subtitle">לוח שידורים אישי · חדשות · מוזיקה · פודקאסטים</div>
+  </div>
+  <div class="np-clock-strip">
+    <div class="np-clock-strip-inner">
+      <div class="np-clock" id="np-clock">00:00</div>
+      <div class="np-clock-meta">
+        <div class="np-bulletin-label">מבזק הבא בעוד <strong id="np-mins">--</strong> דקות</div>
+        <div class="np-prog-bar"><div class="np-prog-fill" id="np-prog" style="width:0%"></div></div>
+      </div>
+      <div class="np-now-playing" id="np-nowplay" style="display:none">▶ <span id="np-np-title">—</span></div>
+    </div>
+  </div>
+  <div class="np-body">
+    <div class="np-body-inner">
+      <div class="np-schedule-col">
+        <div class="np-col-head">
+          לוח שידורים
+          <div class="np-date-nav">
+            <button class="np-nav-btn" onclick="shiftDay(-1)">›</button>
+            <div class="np-date-label" id="np-datelabel">היום</div>
+            <button class="np-nav-btn" onclick="shiftDay(1)">‹</button>
+          </div>
+        </div>
+        <div id="np-grid"></div>
+      </div>
+      <div class="np-sidebar">
+        <div>
+          <div class="np-sidebar-head">חיפוש פודקאסט</div>
+          <input class="np-search-input" type="text" placeholder="חפש..." oninput="debSearch(this.value,'np-sr','np')">
+          <div id="np-sr"><div class="empty-hint theme-a">הקלד לחיפוש</div></div>
+        </div>
+        <div>
+          <div class="np-sidebar-head">תחנות רדיו</div>
+          <div class="np-station-chips" id="np-station-chips"></div>
+        </div>
+        <div>
+          <div class="np-sidebar-head">מבזק חדשות</div>
+          <div class="np-news-box">
+            <div class="np-news-head">📡 כאן רשת ב׳</div>
+            <div class="np-news-source">הבא בעוד <strong id="np-news-cd">--</strong> דקות</div>
+            <div class="np-news-prog"><div class="np-news-prog-fill" id="np-news-prog" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="np-player-bar">
+    <div class="np-player-bar-inner">
+      <button class="np-play-btn" id="np-playbtn" onclick="togglePlay()">▶</button>
+      <div class="np-player-info">
+        <div class="np-player-track" id="np-track">לא מנגן</div>
+        <div class="np-player-source" id="np-source">—</div>
+      </div>
+      <button class="np-news-now-btn" onclick="playNews()">📡 חדשות עכשיו</button>
+      <button class="np-news-now-btn" id="np-return-btn" onclick="returnToSchedule()" style="display:none;border-color:#1a1209;color:#1a1209">⟲ חזרה ללו"ז</button>
+    </div>
+  </div>
+  <div class="np-credit">
+    <img src="data:image/png;base64,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" alt="חפיצים">
+  </div>
+</div>
+
+
+<!-- ════ THEME B ════ -->
+<div class="theme-view" id="theme-b">
+  <div class="bk-inner">
+    <div class="bk-header">
+      <div>
+        <div class="bk-brand-name">חפיצים: רדיו</div>
+        <div class="bk-brand-sub">Personal Broadcast · Since Today</div>
+      </div>
+      <div class="bk-clock" id="bk-clock">00:00</div>
+    </div>
+    <div class="bk-dial-strip">
+      <div class="bk-dial-track">
+        <div class="bk-dial-marks">
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">88</div></div>
+          <div class="bk-mark"><div class="bk-mark-line short"></div></div>
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">92</div></div>
+          <div class="bk-mark"><div class="bk-mark-line short"></div></div>
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">96</div></div>
+          <div class="bk-mark"><div class="bk-mark-line short"></div></div>
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">100</div></div>
+          <div class="bk-mark"><div class="bk-mark-line short"></div></div>
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">104</div></div>
+          <div class="bk-mark"><div class="bk-mark-line short"></div></div>
+          <div class="bk-mark"><div class="bk-mark-line tall"></div><div class="bk-mark-num">108</div></div>
+        </div>
+        <div class="bk-needle" id="bk-needle"></div>
+      </div>
+      <div class="bk-bulletin-row">מבזק הבא בעוד <strong id="bk-mins">--</strong> דקות <div class="bk-prog-inline"><div class="bk-prog-inline-fill" id="bk-prog" style="width:0%"></div></div></div>
+    </div>
+    <div class="bk-body">
+      <div class="bk-schedule">
+        <div class="bk-section-label">
+          לוח שידורים
+          <div class="bk-date-nav">
+            <button class="bk-nav-btn" onclick="shiftDay(-1)">›</button>
+            <div class="bk-date-label" id="bk-datelabel">היום</div>
+            <button class="bk-nav-btn" onclick="shiftDay(1)">‹</button>
+          </div>
+        </div>
+        <div id="bk-grid"></div>
+      </div>
+      <div class="bk-panel">
+        <div>
+          <div class="bk-panel-label">בקרה</div>
+          <div class="bk-knob-row">
+            <div class="bk-knob"><div class="bk-knob-circle"></div><div class="bk-knob-label">עוצמה</div></div>
+            <div class="bk-knob"><div class="bk-knob-circle" style="transform:rotate(60deg)"></div><div class="bk-knob-label">טיימר</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="bk-panel-label">חיפוש פודקאסט</div>
+          <input class="bk-search-input" type="text" placeholder="חפש..." oninput="debSearch(this.value,'bk-sr','bk')">
+          <div id="bk-sr" style="margin-top:7px"><div class="empty-hint theme-b">הקלד לחיפוש</div></div>
+        </div>
+        <div>
+          <div class="bk-panel-label">תחנות רדיו</div>
+          <div class="bk-station-chips" id="bk-station-chips"></div>
+        </div>
+        <div class="bk-news-indicator">
+          <div class="bk-news-light"></div>
+          <div class="bk-news-text">מבזק הבא</div>
+          <div class="bk-news-time-val" id="bk-newstime">--:00</div>
+          <div class="bk-news-src">כאן רשת ב׳</div>
+        </div>
+      </div>
+    </div>
+    <div class="bk-player">
+      <button class="bk-play-btn" id="bk-playbtn" onclick="togglePlay()">▶</button>
+      <div class="bk-player-info">
+        <div class="bk-player-track" id="bk-track">לא מנגן</div>
+        <div class="bk-player-source" id="bk-source">—</div>
+      </div>
+      <button class="bk-news-now-btn" onclick="playNews()">📡 חדשות</button>
+      <button class="bk-news-now-btn" id="bk-return-btn" onclick="returnToSchedule()" style="display:none;background:#5a4020">⟲ חזרה ללו"ז</button>
+    </div>
+    <div class="bk-credit">
+      <img src="data:image/png;base64,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" alt="חפיצים">
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ THEME C ════ -->
+<div class="theme-view" id="theme-c">
+  <div class="cr-header">
+    <div>
+      <div class="cr-logo-name">חפיצים: רדיו</div>
+      <div class="cr-logo-sub">STUDIO CONTROL · PERSONAL BROADCAST SYSTEM</div>
+    </div>
+    <div class="cr-status-row">
+      <div class="cr-status-item"><div class="cr-status-val" id="cr-clock">00:00</div><div class="cr-status-label">שעה</div></div>
+      <div class="cr-divider"></div>
+      <div class="cr-status-item"><div class="cr-status-val" id="cr-mins">--</div><div class="cr-status-label">דק׳ למבזק</div></div>
+      <div class="cr-divider"></div>
+      <div class="cr-status-item"><div class="cr-status-val red" id="cr-onair">—</div><div class="cr-status-label">סטטוס</div></div>
+    </div>
+  </div>
+  <div class="cr-vu-strip" id="cr-vu"><div class="cr-vu-label">VU</div></div>
+  <div class="cr-body">
+    <div class="cr-body-inner">
+      <div class="cr-schedule">
+        <div class="cr-section-label">
+          לוח שידורים — CH.1
+          <div class="cr-date-nav">
+            <button class="cr-nav-btn" onclick="shiftDay(-1)">›</button>
+            <div class="cr-date-label" id="cr-datelabel">היום</div>
+            <button class="cr-nav-btn" onclick="shiftDay(1)">‹</button>
+          </div>
+        </div>
+        <div id="cr-grid"></div>
+      </div>
+      <div class="cr-panel">
+        <div>
+          <div class="cr-panel-label">חיפוש פודקאסט</div>
+          <input class="cr-search-input" type="text" placeholder="חפש..." oninput="debSearch(this.value,'cr-sr','cr')">
+          <div id="cr-sr" style="margin-top:7px"><div class="empty-hint theme-c">הקלד לחיפוש</div></div>
+        </div>
+        <div>
+          <div class="cr-panel-label">תחנות רדיו</div>
+          <div class="cr-station-chips" id="cr-station-chips"></div>
+        </div>
+        <div class="cr-news-block">
+          <div class="cr-news-label"><div class="cr-news-dot"></div> NEWS BULLETIN</div>
+          <div class="cr-news-val" id="cr-newstime">--:00</div>
+          <div class="cr-news-sub">כאן רשת ב׳ · RSS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cr-player">
+    <div class="cr-player-inner">
+      <button class="cr-play-btn" id="cr-playbtn" onclick="togglePlay()">▶</button>
+      <div class="cr-player-info">
+        <div class="cr-player-track" id="cr-track">STANDBY</div>
+        <div class="cr-player-source" id="cr-source">NO SIGNAL</div>
+      </div>
+      <button class="cr-news-now-btn" onclick="playNews()">● NEWS NOW</button>
+      <button class="cr-news-now-btn" id="cr-return-btn" onclick="returnToSchedule()" style="display:none;border-color:#888;color:#888">⟲ RETURN TO SCHEDULE</button>
+    </div>
+  </div>
+  <div class="cr-credit">
+    <img src="data:image/png;base64,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" alt="חפיצים">
+  </div>
+</div>
+
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">עריכת תא</div>
+      <div class="modal-slot-time" id="modal-time">08:00</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-type-row">
+        <button class="modal-type-btn" id="mt-spotify" onclick="setModalType('spotify')">Spotify</button>
+        <button class="modal-type-btn" id="mt-podcast" onclick="setModalType('podcast')">פודקאסט</button>
+        <button class="modal-type-btn" id="mt-radio" onclick="setModalType('radio')">רדיו</button>
+      </div>
+      <div id="modal-inner"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-save" onclick="saveSlot()">שמור</button>
+      <button class="modal-cancel" onclick="closeModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'radio-v3';
+function defaultState() { return { baseSchedule: buildEmpty(), overrides: {}, dayOffset: 0, theme: 'a', playing: false, newsFreq: 1 }; }
+function buildEmpty() { const s={}; for(let h=0;h<24;h++) s[h]=null; return s; }
+let S = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState(); } catch { return defaultState(); } })();
+function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
+
+let currentTheme = S.theme || 'a';
+let editHour = null, editType = 'podcast', pending = null, searchTimer = null;
+
+// ── THEME ──
+function setTheme(t) {
+  currentTheme = t; S.theme = t; persist();
+  document.querySelectorAll('.theme-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('theme-' + t).classList.add('active');
+
+  // update global theme switcher skin + active button
+  const gts = document.getElementById('global-theme-switcher');
+  if (gts) {
+    gts.className = 'skin-' + t;
+    ['a','b','c'].forEach(k => {
+      const btn = document.getElementById('gts-' + k);
+      if (btn) btn.classList.toggle('active', k === t);
+    });
+  }
+
+  // restyle mobile FAB + bottom sheet to match the active theme
+  const fab = document.getElementById('mobile-fab');
+  if (fab) fab.className = 'fab theme-' + t;
+  const sheet = document.getElementById('mobile-sheet');
+  if (sheet) sheet.className = 'sheet theme-' + t;
+
+  updateModal();
+  renderAll();
+}
+
+// ── MOBILE BOTTOM SHEET ──
+function openSheet() {
+  document.getElementById('sheet-overlay').classList.add('open');
+  renderStationChips(); // make sure sheet-station-chips is filled
+}
+function closeSheet() {
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+function switchSheetTab(name) {
+  ['search','radio','news'].forEach(t => {
+    document.getElementById('sheet-tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('sheet-pane-' + t).classList.toggle('active', t === name);
+  });
+}
+
+// ── CLOCK ──
+function tick() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const timeStr = hh+':'+mm;
+  const mins = now.getMinutes(), secs = now.getSeconds();
+  const pct = ((mins*60+secs)/3600*100).toFixed(2);
+  const minsLeft = 59 - mins;
+  const nextHour = (now.getHours()+1)%24;
+  const nextStr = String(nextHour).padStart(2,'0')+':00';
+
+  // needle
+  const needle = document.getElementById('bk-needle');
+  if (needle) needle.style.left = (15 + pct*0.7) + '%';
+
+  // VU
+  const vu = document.getElementById('cr-vu');
+  if (vu) {
+    if (S.playing) {
+      vu.innerHTML = '<div class="cr-vu-label">VU</div>';
+      for (let i=0;i<16;i++) {
+        const h = Math.random()*100;
+        const c = h>85 ? 'linear-gradient(to top,#1a6b1a,#c8922a,#cc2200)' : 'linear-gradient(to top,#1a6b1a,#c8922a)';
+        vu.innerHTML += `<div class="cr-vu-bar"><div class="cr-vu-fill" style="height:${h}%;background:${c}"></div></div>`;
+      }
+    } else {
+      vu.innerHTML = '<div class="cr-vu-label">VU</div>' + '<div class="cr-vu-bar"></div>'.repeat(16);
+    }
+  }
+
+  setText('np-clock', timeStr); setText('bk-clock', timeStr); setText('cr-clock', timeStr);
+  setText('np-mins', minsLeft); setText('bk-mins', minsLeft); setText('cr-mins', minsLeft);
+  setText('np-news-cd', minsLeft);
+  setText('sheet-news-cd', minsLeft);
+  setText('bk-newstime', nextStr); setText('cr-newstime', nextStr);
+  setW('np-prog', pct); setW('bk-prog', pct); setW('np-news-prog', pct);
+  setText('np-date-str', now.toLocaleDateString('he-IL', {weekday:'long',day:'numeric',month:'long'}));
+  setText('cr-onair', S.playing ? 'ON' : '—');
+}
+
+function setText(id,v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+function setW(id,v) { const el=document.getElementById(id); if(el) el.style.width=v+'%'; }
+setInterval(tick, 800); tick();
+
+// ── SCHEDULE ──
+function getDateKey(offset) { const d=new Date(); d.setDate(d.getDate()+offset); return d.toISOString().slice(0,10); }
+function getSlot(h, offset) { const key=getDateKey(offset); const ov=S.overrides[key]||{}; return (h in ov)?ov[h]:S.baseSchedule[h]; }
+function dateLabel(offset) {
+  if(offset===0) return 'היום'; if(offset===1) return 'מחר'; if(offset===-1) return 'אתמול';
+  const d=new Date(); d.setDate(d.getDate()+offset); return d.toLocaleDateString('he-IL',{day:'numeric',month:'short'});
+}
+
+function shiftDay(delta) {
+  S.dayOffset += delta; persist();
+  ['np','bk','cr'].forEach(p => { const el=document.getElementById(p+'-datelabel'); if(el) el.textContent=dateLabel(S.dayOffset); });
+  renderAll();
+}
+
+function typeColor(slot) {
+  if(!slot) return '#888';
+  if(slot.type==='spotify') return '#1db954';
+  if(slot.type==='radio') return '#1a8bc8';
+  return currentTheme==='c' ? '#c8922a' : currentTheme==='b' ? '#d4a853' : '#8b4513';
+}
+
+function typeLabel(slot) {
+  if(!slot) return '';
+  if(slot.type==='spotify') return 'Spotify';
+  if(slot.type==='radio') return 'רדיו · שידור חי';
+  return 'פודקאסט';
+}
+
+function renderAll() {
+  ['np','bk','cr'].forEach(p => {
+    const el=document.getElementById(p+'-datelabel'); if(el) el.textContent=dateLabel(S.dayOffset);
+    renderGrid(p);
+  });
+  renderStationChips();
+}
+
+// Render quick-access radio station chips in each theme's sidebar, derived from LIVE_STREAMS
+function renderStationChips() {
+  if (typeof LIVE_STREAMS === 'undefined') return;
+  const stations = Object.entries(LIVE_STREAMS);
+  ['np','bk','cr'].forEach(prefix => {
+    const container = document.getElementById(prefix + '-station-chips');
+    if (!container) return;
+    container.innerHTML = stations.map(([id, s]) =>
+      `<div class="${prefix}-station-chip" onclick="quickPlayStation('${id}')">📻 ${s.name}</div>`
+    ).join('');
+  });
+  // mobile sheet uses the same chip styling as theme A
+  const sheetContainer = document.getElementById('sheet-station-chips');
+  if (sheetContainer) {
+    sheetContainer.innerHTML = stations.map(([id, s]) =>
+      `<div class="np-station-chip" onclick="quickPlayStation('${id}'); closeSheet();">📻 ${s.name}</div>`
+    ).join('');
+  }
+}
+
+// Tapping a station chip plays it immediately, like any other manual override
+function quickPlayStation(stationId) {
+  const station = LIVE_STREAMS[stationId];
+  if (!station) return;
+  playerState.manualOverride = true;
+  playerState.beforeNews = null;
+  playLiveStream(stationId).then(() => syncUI());
+}
+
+function renderGrid(prefix) {
+  const grid = document.getElementById(prefix+'-grid'); if(!grid) return;
+  const nowH = new Date().getHours(), isToday = S.dayOffset===0;
+  grid.innerHTML = '';
+  for(let h=0;h<24;h++) {
+    const slot=getSlot(h, S.dayOffset);
+    const isPast=isToday&&h<nowH, isActive=isToday&&h===nowH;
+    const t=String(h).padStart(2,'0')+':00';
+    const el=document.createElement('div');
+    const acts = `<div class="${prefix}-slot-actions">
+      <button class="${prefix}-slot-btn" onclick="openModal(${h},event)">✎</button>
+      ${slot?`<button class="${prefix}-slot-btn del" onclick="clearSlot(${h},event)">✕</button>`:''}
+    </div>`;
+
+    if(prefix==='np') {
+      el.className='np-slot'+(isActive?' active':'')+(isPast?' past':'');
+      el.innerHTML=`<span class="np-slot-time">${t}</span><div class="np-slot-info"><div class="np-slot-name${slot?'':' empty'}">${slot?slot.name:'לחץ להוספה'}</div>${slot?`<div class="np-slot-type">${slot.type==='spotify'?'Spotify':'פודקאסט'}</div>`:''}</div>${acts}`;
+    } else if(prefix==='bk') {
+      el.className='bk-slot'+(isActive?' active':'')+(isPast?' past':'');
+      el.innerHTML=`<span class="bk-slot-time">${t}</span><div class="bk-slot-dot" style="background:${slot?typeColor(slot):'#888'}"></div><div class="bk-slot-name${slot?'':' empty'}">${slot?slot.name:'פנוי'}</div>${acts}`;
+    } else {
+      el.className='cr-slot'+(isActive?' active':'')+(isPast?' past':'');
+      const dur=isActive?'ON AIR':(slot?'~60 MIN':'—');
+      el.innerHTML=`<span class="cr-slot-time">${t}</span><div class="cr-slot-led" style="background:${slot?typeColor(slot):'#2a2018'}${isActive&&slot?';box-shadow:0 0 5px '+typeColor(slot):''}"></div><div class="cr-slot-name${slot?'':' empty'}">${slot?slot.name:'— לא מוגדר —'}</div><div class="cr-slot-dur">${dur}</div>${acts}`;
+    }
+    el.addEventListener('click', () => openSlotChoice(h, S.dayOffset));
+    grid.appendChild(el);
+  }
+  if(isToday) { const slots=grid.querySelectorAll('[class*="-slot"]'); if(slots[nowH]) setTimeout(()=>slots[nowH].scrollIntoView({block:'center',behavior:'smooth'}),100); }
+}
+
+// ── SLOT CHOICE POPUP (play vs edit) ──
+function openSlotChoice(h, dayOffset) {
+  const slot = getSlot(h, dayOffset);
+  const existing = document.getElementById('slot-choice');
+  if (existing) existing.remove();
+
+  const t = String(h).padStart(2,'0') + ':00';
+  const ac = currentTheme==='c' ? '#c8922a' : currentTheme==='b' ? '#d4a853' : '#8b4513';
+  const bg = currentTheme==='c' ? '#2a2018' : currentTheme==='b' ? '#e8dcc8' : '#f7f3ea';
+  const border = currentTheme==='c' ? '#c8922a' : currentTheme==='b' ? '#8b6010' : '#1a1209';
+  const txt = currentTheme==='c' ? '#c8bfb0' : currentTheme==='b' ? '#2a1a08' : '#1a1209';
+
+  const box = document.createElement('div');
+  box.id = 'slot-choice';
+  box.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:997;display:flex;align-items:center;justify-content:center;`;
+  box.innerHTML = `
+    <div style="background:${bg};border:2px solid ${border};border-radius:8px;padding:20px;width:280px;text-align:center;font-family:inherit;color:${txt}">
+      <div style="font-size:20px;font-weight:600;margin-bottom:4px;color:${ac}">${t}</div>
+      <div style="font-size:13px;margin-bottom:16px;opacity:0.75">${slot ? slot.name : 'תא פנוי'}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${slot ? `<button id="sc-play" style="padding:10px;border:none;border-radius:5px;background:${ac};color:#fff;font-size:13px;cursor:pointer;font-family:inherit">▶ נגן עכשיו</button>` : ''}
+        <button id="sc-edit" style="padding:10px;border:1px solid ${border};border-radius:5px;background:transparent;color:${txt};font-size:13px;cursor:pointer;font-family:inherit">✎ ערוך תא</button>
+        <button id="sc-cancel" style="padding:8px;border:none;background:transparent;color:${txt};opacity:0.5;font-size:12px;cursor:pointer;font-family:inherit">ביטול</button>
+      </div>
+    </div>`;
+  document.body.appendChild(box);
+
+  box.addEventListener('click', e => { if (e.target === box) box.remove(); });
+  if (slot) {
+    document.getElementById('sc-play').addEventListener('click', () => {
+      box.remove();
+      playSlotManually(h, dayOffset);
+    });
+  }
+  document.getElementById('sc-edit').addEventListener('click', () => {
+    box.remove();
+    openModal(h);
+  });
+  document.getElementById('sc-cancel').addEventListener('click', () => box.remove());
+}
+
+function clearSlot(h,e) {
+  e&&e.stopPropagation();
+  const key=getDateKey(S.dayOffset);
+  if(!S.overrides[key]) S.overrides[key]={};
+  S.overrides[key][h]=null; persist(); renderAll();
+}
+
+// ── MODAL ──
+function updateModal() {
+  const box=document.getElementById('modal-box'); box.className='modal-box theme-'+currentTheme;
+  applyModalTypeStyle(); renderModalInner();
+}
+
+function openModal(h,e) {
+  e&&e.stopPropagation(); editHour=h; pending=null; editType='podcast';
+  document.getElementById('modal-time').textContent=String(h).padStart(2,'0')+':00';
+  const ex=getSlot(h,S.dayOffset); if(ex) editType=ex.type;
+  updateModal();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if(e.target===document.getElementById('modal')) closeModal(); });
+
+function setModalType(t) { editType=t; applyModalTypeStyle(); renderModalInner(); }
+
+function applyModalTypeStyle() {
+  document.getElementById('mt-spotify').className='modal-type-btn'+(editType==='spotify'?' active-spotify':'');
+  document.getElementById('mt-podcast').className='modal-type-btn'+(editType==='podcast'?' active-podcast':'');
+  document.getElementById('mt-radio').className='modal-type-btn'+(editType==='radio'?' active-radio':'');
+}
+
+function renderModalInner() {
+  const inner=document.getElementById('modal-inner');
+  if(editType==='spotify') {
+    inner.innerHTML=`<div style="font-size:13px;line-height:1.7;padding:6px 0;color:#888">ינגן את פלייליסט ברירת המחדל שלך בספוטיפיי.</div>`;
+  } else if(editType==='radio') {
+    const stations = Object.entries(LIVE_STREAMS).map(([id, s]) => ({
+      id,
+      name: s.name,
+      rss: s.rss || '',  // only kan-bet has an RSS source for now
+    }));
+    const ac = currentTheme==='c'?'#c8922a':currentTheme==='b'?'#d4a853':'#8b4513';
+    const tc = currentTheme==='c'?'#c8bfb0':'#2a2015';
+    inner.innerHTML = `
+      <div style="font-size:11px;color:#888;margin-bottom:10px;line-height:1.6">
+        אם יש RSS — יתחיל בפרק של היום. אחרת תמיד שידור חי.
+      </div>
+      ${stations.map(s=>`
+        <div class="modal-result" onclick="selectRadioStation('${s.id}','${s.name}','${s.rss||''}','')">
+          <div style="width:34px;height:34px;border-radius:50%;background:${ac};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">📻</div>
+          <div class="modal-result-info">
+            <div class="modal-result-name" style="color:${tc}">${s.name}</div>
+            <div class="modal-result-author">${s.rss ? 'RSS + שידור חי' : 'שידור חי'}</div>
+          </div>
+          <button class="modal-result-sel" id="sel-${s.id}">בחר</button>
+        </div>`).join('')}
+      <div style="margin-top:12px;font-size:11px;color:#888">הוסף תחנה ידנית:</div>
+      <input class="modal-search" id="radio-name-input" type="text" placeholder="שם התחנה..." style="margin-bottom:6px">
+      <input class="modal-search" id="radio-rss-input" type="text" placeholder="RSS URL (אם קיים)..." style="margin-bottom:6px">
+      <input class="modal-search" id="radio-stream-input" type="text" placeholder="Stream URL (m3u8 / mp3)...">`;
+  } else {
+    inner.innerHTML=`<input class="modal-search" id="modal-search" type="text" placeholder="חפש פודקאסט..." oninput="debModalSearch(this.value)"><div class="modal-results" id="modal-results"><div class="empty-hint theme-${currentTheme}">הקלד לחיפוש</div></div>`;
+  }
+}
+
+function selectRadioStation(id, name, rss, streamUrl) {
+  pending = { type:'radio', stationId:id, name, rss, streamUrl };
+  // mark selected
+  document.querySelectorAll('[id^="sel-"]').forEach(b => { b.textContent='בחר'; b.classList.remove('selected'); });
+  const btn = document.getElementById('sel-'+id);
+  if (btn) { btn.textContent='✓'; btn.classList.add('selected'); }
+}
+
+function saveSlot() {
+  if(editHour===null) return;
+  let d;
+  if(editType==='spotify') {
+    d={type:'spotify',name:'פלייליסט ספוטיפיי'};
+  } else if(editType==='radio') {
+    // check if manual entry
+    const nameIn = document.getElementById('radio-name-input');
+    const rssIn = document.getElementById('radio-rss-input');
+    const streamIn = document.getElementById('radio-stream-input');
+    if (nameIn && nameIn.value.trim()) {
+      d = { type:'radio', name:nameIn.value.trim(), rss:rssIn?.value.trim()||'', streamUrl:streamIn?.value.trim()||'' };
+    } else if (pending && pending.type==='radio') {
+      d = pending;
+    } else { closeModal(); return; }
+  } else if(pending) {
+    d={type:'podcast',name:pending.name,rss:pending.rss,art:pending.art};
+  } else { closeModal(); return; }
+
+  const key=getDateKey(S.dayOffset);
+  if(!S.overrides[key]) S.overrides[key]={};
+  S.overrides[key][editHour]=d; persist(); renderAll(); closeModal();
+}
+
+// ── SEARCH ──
+function debSearch(q,cid,prefix) { clearTimeout(searchTimer); searchTimer=setTimeout(()=>searchPodcasts(q,cid,prefix,false),400); }
+function debModalSearch(q) { clearTimeout(searchTimer); searchTimer=setTimeout(()=>searchPodcasts(q,'modal-results',currentTheme,true),400); }
+
+async function searchPodcasts(q,cid,prefix,isModal) {
+  const c=document.getElementById(cid); if(!c) return;
+  if(!q||q.length<2) { c.innerHTML=`<div class="empty-hint theme-${currentTheme}">הקלד לחיפוש</div>`; return; }
+  c.innerHTML=`<div class="empty-hint theme-${currentTheme}">מחפש...</div>`;
+  try {
+    const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=podcast&limit=6&country=IL`);
+    const data=await res.json();
+    if(!data.results.length) { c.innerHTML=`<div class="empty-hint theme-${currentTheme}">לא נמצאו תוצאות</div>`; return; }
+    c.innerHTML='';
+    data.results.forEach(p => {
+      const name=p.collectionName, author=p.artistName, art=p.artworkUrl60||'', rss=p.feedUrl||'';
+      const div=document.createElement('div');
+      if(isModal) {
+        div.className='modal-result';
+        div.innerHTML=`<img class="modal-result-art" src="${art}" alt="" loading="lazy"><div class="modal-result-info"><div class="modal-result-name">${name}</div><div class="modal-result-author">${author}</div></div><button class="modal-result-sel">בחר</button>`;
+        div.querySelector('button').addEventListener('click',e=>{
+          e.stopPropagation(); pending={name,rss,art};
+          c.querySelectorAll('.modal-result-sel').forEach(b=>{b.classList.remove('selected');b.textContent='בחר';});
+          div.querySelector('button').textContent='✓'; div.querySelector('button').classList.add('selected');
+        });
+      } else {
+        const themePrefix = prefix === 'sheet' ? 'np' : prefix;
+        const cls = themePrefix==='np'?'np-podcast-result':themePrefix==='bk'?'bk-podcast-result':'cr-podcast-result';
+        const artCls = themePrefix==='np'?'np-pr-art':themePrefix==='bk'?'bk-pr-art':'cr-pr-art';
+        const infoCls = themePrefix==='np'?'np-pr-info':themePrefix==='bk'?'bk-pr-info':'cr-pr-info';
+        const nameCls = themePrefix==='np'?'np-pr-name':themePrefix==='bk'?'bk-pr-name':'cr-pr-name';
+        const authCls = themePrefix==='np'?'np-pr-author':themePrefix==='bk'?'bk-pr-author':'cr-pr-author';
+        div.className=cls;
+        div.innerHTML=`<img class="${artCls}" src="${art}" alt="" loading="lazy"><div class="${infoCls}"><div class="${nameCls}">${name}</div><div class="${authCls}">${author}</div></div>`;
+        div.addEventListener('click',()=>{ openModalWithPodcast(name,rss,art); if(prefix==='sheet') closeSheet(); });
+      }
+      c.appendChild(div);
+    });
+  } catch { c.innerHTML=`<div class="empty-hint theme-${currentTheme}">שגיאה בחיפוש</div>`; }
+}
+
+function openModalWithPodcast(name,rss,art) {
+  const nowH=new Date().getHours(); let h=nowH;
+  for(let i=nowH;i<24;i++) { if(!getSlot(i,S.dayOffset)){h=i;break;} }
+  editHour=h; editType='podcast'; pending={name,rss,art};
+  document.getElementById('modal-time').textContent=String(h).padStart(2,'0')+':00';
+  updateModal();
+  setTimeout(()=>{
+    const inner=document.getElementById('modal-inner'); if(!inner) return;
+    const ac=currentTheme==='c'?'#c8922a':currentTheme==='b'?'#d4a853':'#8b4513';
+    const tc=currentTheme==='c'?'#c8bfb0':'#2a1a08';
+    inner.innerHTML=`<div style="display:flex;gap:10px;align-items:center;padding:8px;border-radius:4px;border:1px solid ${ac}"><img src="${art}" style="width:40px;height:40px;border-radius:3px;object-fit:cover"><div><div style="font-size:14px;color:${tc}">${name}</div><div style="font-size:11px;color:${ac}">נבחר ✓</div></div></div>`;
+  },50);
+  document.getElementById('modal').classList.add('open');
+}
+
+// ── AUDIO ENGINE ──
+const NEWS_RSS = 'https://www.spreaker.com/show/6095076/episodes/feed';
+const NEWS_SHOW_ID = '6095076';
+const PROXY = 'https://api.allorigins.win/get?url=';
+
+// Known live streams — fallback when podcast episode not yet available
+const LIVE_STREAMS = {
+  'kan-bet': {
+    name: 'כאן רשת ב׳',
+    url: 'https://22576.live.streamtheworld.com/KAN_BET.mp3',
+    fallback: 'https://kanliveicy.media.kan.org.il/icy/kanbet_mp3?providername=tunein',
+    rss: 'https://www.spreaker.com/show/6095076/episodes/feed'
+  },
+  'kan-gimel': {
+    name: 'כאן גימל',
+    url: 'https://25493.live.streamtheworld.com/KAN_GIMMEL.mp3',
+    fallback: 'https://kanliveicy.media.kan.org.il/icy/kangimmel_mp3?providername=tunein'
+  },
+  'galatz': {
+    name: 'גלי צה״ל',
+    url: 'https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz',
+    fallback: 'https://glzwizzlv.bynetcdn.com/glz_mp3'
+  },
+  'galgalatz': {
+    name: 'גלגלצ',
+    url: 'https://glzwizzlv.bynetcdn.com/glglz_mp3?awCollectionId=misc&awEpisodeId=glglz',
+    fallback: 'https://glzwizzlv.bynetcdn.com/glglz_mp3'
+  },
+  'radio-103': {
+    name: 'רדיו 103FM',
+    url: 'https://cdn.cybercdn.live/103FM/Live/icecast.audio',
+    fallback: 'https://cdn.cybercdn.live/103FM/Live/icecast.audio'
+  },
+  'kan-88': {
+    name: 'כאן 88',
+    url: 'https://22673.live.streamtheworld.com/KAN_88.mp3',
+    fallback: 'https://kanliveicy.media.kan.org.il/icy/kan88_mp3?providername=tunein'
+  }
+};
+
+// Check if a podcast RSS has an episode published TODAY
+async function hasEpisodeToday(rssUrl) {
+  try {
+    const episodes = await fetchRSS(rssUrl);
+    if (!episodes.length) return false;
+    const today = new Date().toDateString();
+    const latest = new Date(episodes[0].pubDate).toDateString();
+    return latest === today;
+  } catch { return false; }
+}
+
+// Play a slot — smart: try RSS first, fallback to live stream
+async function playSlot(slot) {
+  if (!slot) { showToast('לא מוגדר תוכן לשעה הזו'); return; }
+
+  if (slot.type === 'spotify') {
+    showToast('חיבור Spotify יתווסף בקרוב');
+    return;
+  }
+
+  const streamKey = slot.liveKey || slot.stationId;
+
+  if (slot.type === 'radio') {
+    if (slot.rss) {
+      // Smart: try today's episode first, fallback to live
+      playerState.mode = 'loading'; syncUI();
+      const hasToday = await hasEpisodeToday(slot.rss);
+      if (hasToday) {
+        await playPodcastRss(slot.rss, slot.name);
+      } else {
+        showToast('הפרק עדיין לא זמין — עובר לשידור חי');
+        await playLiveStream(streamKey, slot.streamUrl);
+      }
+    } else {
+      await playLiveStream(streamKey, slot.streamUrl);
+    }
+    return;
+  }
+
+  if (slot.type === 'podcast' && slot.rss) {
+    await playPodcastRss(slot.rss, slot.name);
+  }
+}
+
+// Find the episode whose publish time is closest to a target hour on a given day.
+// Used when manually playing a radio slot "in the past" — finds the bulletin
+// that was actually relevant to that hour, not just the latest one.
+async function findEpisodeForHour(rssUrl, hour, dayOffset) {
+  const episodes = await fetchRSS(rssUrl); // newest-first
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + dayOffset);
+  targetDate.setHours(hour, 0, 0, 0);
+  const targetTime = targetDate.getTime();
+
+  let best = null, bestDiff = Infinity;
+  for (const ep of episodes) {
+    const epTime = new Date(ep.pubDate).getTime();
+    if (isNaN(epTime)) continue;
+    const diff = Math.abs(epTime - targetTime);
+    if (diff < bestDiff) { bestDiff = diff; best = ep; }
+  }
+  return best || episodes[0] || null;
+}
+
+// Play any slot manually, regardless of the current hour — sets override flag
+async function playSlotManually(hour, dayOffset) {
+  const slot = getSlot(hour, dayOffset);
+  if (!slot) { showToast('תא ריק'); return; }
+
+  const nowHour = new Date().getHours();
+  const isCurrentHour = dayOffset === 0 && hour === nowHour;
+  playerState.manualOverride = !isCurrentHour;
+  playerState.beforeNews = null; // manual play breaks any pending news-return chain
+
+  // For radio slots played outside their scheduled hour, find the episode
+  // that matches that specific hour rather than always grabbing the latest.
+  if (!isCurrentHour && slot.type === 'radio' && slot.rss) {
+    playerState.mode = 'loading'; syncUI();
+    try {
+      const ep = await findEpisodeForHour(slot.rss, hour, dayOffset);
+      if (ep) {
+        playerState.mode = 'podcast';
+        playerState.currentRss = slot.rss;
+        playerState.currentName = slot.name + ' — ' + new Date(ep.pubDate).toLocaleString('he-IL', {hour:'2-digit', minute:'2-digit', day:'numeric', month:'short'});
+        audio.src = ep.url;
+        audio.currentTime = 0;
+        await audio.play();
+        syncUI();
+        showToast('מנגן מבזק מהשעה ' + String(hour).padStart(2,'0') + ':00');
+        updateMediaSession(ep.title, slot.name);
+        return;
+      }
+    } catch(e) {
+      console.warn('[playSlotManually] couldn\'t find episode for hour, falling back to live:', e.message);
+      showToast('לא נמצא מבזק לשעה זו — עובר לשידור חי');
+    }
+    // fall through to live stream if RSS lookup failed
+    await playLiveStream(slot.liveKey || slot.stationId, slot.streamUrl);
+    syncUI();
+    return;
+  }
+
+  await playSlot(slot);
+  syncUI();
+}
+
+// Return to whatever is scheduled for the current real-world hour
+async function returnToSchedule() {
+  playerState.manualOverride = false;
+  const slot = getSlot(new Date().getHours(), 0);
+  if (!slot) {
+    audio.pause();
+    playerState.mode = 'idle';
+    syncUI();
+    showToast('אין תוכן מתוזמן לשעה זו');
+    return;
+  }
+  await playSlot(slot);
+  syncUI();
+}
+
+async function playLiveStream(key, directUrl) {
+  const stream = LIVE_STREAMS[key] || (directUrl ? { name: key || 'שידור חי', url: directUrl, fallback: directUrl } : null);
+  if (!stream) { showToast('סטרים לא נמצא'); return; }
+
+  playerState.mode = 'loading';
+  playerState.currentName = stream.name;
+  syncUI();
+  showToast('מתחבר לשידור חי...');
+
+  try {
+    audio.src = stream.url;
+    await audio.play();
+    playerState.mode = 'radio';
+    syncUI();
+    showToast('שידור חי: ' + stream.name);
+    updateMediaSession(stream.name, 'שידור חי');
+  } catch(e) {
+    console.warn('[playLiveStream] primary URL failed:', e.message, '— trying fallback');
+    try {
+      audio.src = stream.fallback;
+      await audio.play();
+      playerState.mode = 'radio';
+      syncUI();
+      showToast('שידור חי: ' + stream.name);
+      updateMediaSession(stream.name, 'שידור חי');
+    } catch(e2) {
+      console.error('[playLiveStream] fallback also failed:', e2.message);
+      showToast('לא הצלחתי להתחבר לשידור החי: ' + e2.message);
+      playerState.mode = 'idle';
+      syncUI();
+    }
+  }
+}
+
+// Known live streams — fallback when RSS episode not yet published
+const audio = new Audio();
+audio.preload = 'none';
+
+let playerState = {
+  mode: 'idle',
+  newsEpisode: null,
+  beforeNews: null,
+  currentRss: null,
+  currentName: null,
+  manualOverride: false,  // true when playing something other than the current scheduled hour
+};
+
+// sync UI across all three themes
+function syncUI() {
+  const isPlaying = !audio.paused && audio.src;
+  const isLoading = playerState.mode === 'loading';
+
+  ['np','bk','cr'].forEach(p => {
+    const btn = document.getElementById(p+'-playbtn');
+    const track = document.getElementById(p+'-track');
+    const source = document.getElementById(p+'-source');
+    if (!btn) return;
+
+    if (isLoading) {
+      btn.textContent = '⏳';
+    } else {
+      btn.textContent = isPlaying ? '⏸' : '▶';
+    }
+
+    if (playerState.mode === 'news' && playerState.newsEpisode) {
+      if (track) track.textContent = 'מבזק — ' + playerState.newsEpisode.title;
+      if (source) source.textContent = p==='cr' ? 'NEWS · RSS · כאן רשת ב׳' : 'חדשות · כאן רשת ב׳';
+    } else if (playerState.mode === 'podcast') {
+      if (track) track.textContent = playerState.currentName || 'פודקאסט';
+      if (source) source.textContent = playerState.manualOverride ? 'פודקאסט · RSS · ידני' : 'פודקאסט · RSS';
+    } else if (playerState.mode === 'radio') {
+      if (track) track.textContent = playerState.currentName || 'רדיו';
+      if (source) source.textContent = playerState.manualOverride ? 'רדיו · שידור חי · ידני' : 'רדיו · שידור חי';
+    } else if (playerState.mode === 'loading') {
+      if (track) track.textContent = 'טוען...';
+      if (source) source.textContent = '—';
+    } else {
+      if (track) track.textContent = p==='cr' ? 'STANDBY' : 'לא מנגן';
+      if (source) source.textContent = p==='cr' ? 'NO SIGNAL' : '—';
+    }
+
+    // show/hide "return to schedule" button — only visible when deviating from the live schedule
+    const returnBtn = document.getElementById(p+'-return-btn');
+    if (returnBtn) returnBtn.style.display = playerState.manualOverride ? '' : 'none';
+  });
+
+  // now-playing strip (theme A)
+  const np = document.getElementById('np-nowplay');
+  const npTitle = document.getElementById('np-np-title');
+  if (np) np.style.display = (isPlaying || isLoading) ? '' : 'none';
+  if (npTitle) {
+    if (playerState.mode === 'news' && playerState.newsEpisode) npTitle.textContent = 'מבזק — ' + playerState.newsEpisode.title;
+    else if (playerState.mode === 'podcast' || playerState.mode === 'radio') npTitle.textContent = playerState.currentName || 'מנגן';
+    else npTitle.textContent = 'טוען...';
+  }
+
+  setText('cr-onair', (isPlaying||isLoading) ? 'ON' : '—');
+  S.playing = isPlaying || isLoading;
+  persist();
+}
+
+audio.addEventListener('play', syncUI);
+audio.addEventListener('pause', syncUI);
+audio.addEventListener('ended', onAudioEnded);
+audio.addEventListener('error', onAudioError);
+
+function onAudioEnded() {
+  // after news bulletin — return to podcast if there was one
+  if (playerState.mode === 'news' && playerState.beforeNews) {
+    const prev = playerState.beforeNews;
+    playerState.beforeNews = null;
+    if (prev.mode === 'podcast' && prev.rss) {
+      playPodcastRss(prev.rss, prev.name, prev.position || 0);
+      return;
+    }
+  }
+  playerState.mode = 'idle';
+  syncUI();
+}
+
+function onAudioError() {
+  showToast('שגיאה בטעינת האודיו');
+  playerState.mode = 'idle';
+  syncUI();
+}
+
+// fetch RSS via proxy, return array of { title, url, pubDate }
+// tries multiple proxies since free CORS proxies are unreliable
+async function fetchRSS(rssUrl) {
+  // try direct fetch first — some feeds (like Spreaker) actually send CORS headers
+  try {
+    const res = await fetch(rssUrl, { mode: 'cors' });
+    if (res.ok) {
+      const xmlText = await res.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'text/xml');
+      if (!xml.querySelector('parsererror')) {
+        const items = [...xml.querySelectorAll('item')].map(item => ({
+          title: item.querySelector('title')?.textContent || '',
+          url: item.querySelector('enclosure')?.getAttribute('url') || '',
+          pubDate: item.querySelector('pubDate')?.textContent || '',
+        })).filter(i => i.url);
+        if (items.length) {
+          console.log('[fetchRSS] success via direct fetch —', items.length, 'episodes');
+          return items;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[fetchRSS] direct fetch failed (expected if no CORS):', e.message);
+  }
+
+  const proxies = [
+    { build: url => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url), format: 'json-wrapped' },
+    { build: url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url), format: 'raw' },
+    { build: url => 'https://corsproxy.io/?url=' + encodeURIComponent(url), format: 'raw' },
+    { build: url => 'https://thingproxy.freeboard.io/fetch/' + url, format: 'raw' },
+  ];
+
+  const errors = [];
+  for (const proxy of proxies) {
+    try {
+      const proxyUrl = proxy.build(rssUrl);
+      const res = await fetch(proxyUrl);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+
+      let xmlText;
+      if (proxy.format === 'json-wrapped') {
+        const json = await res.json();
+        xmlText = json.contents;
+      } else {
+        xmlText = await res.text();
+      }
+      if (!xmlText) throw new Error('תגובה ריקה');
+
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'text/xml');
+      if (xml.querySelector('parsererror')) throw new Error('XML לא תקין');
+
+      const items = [...xml.querySelectorAll('item')].map(item => ({
+        title: item.querySelector('title')?.textContent || '',
+        url: item.querySelector('enclosure')?.getAttribute('url') || '',
+        pubDate: item.querySelector('pubDate')?.textContent || '',
+      })).filter(i => i.url);
+
+      if (!items.length) throw new Error('אין פרקים ב-RSS');
+      console.log('[fetchRSS] success via', proxyUrl, '—', items.length, 'episodes');
+      return items;
+    } catch (e) {
+      const hostname = new URL(proxy.build(rssUrl)).hostname;
+      errors.push(hostname + ': ' + e.message);
+      console.warn('[fetchRSS] proxy failed —', hostname, ':', e.message);
+    }
+  }
+  throw new Error(errors.join(' | '));
+}
+
+// Fetch episodes for a Spreaker show via their public JSON API
+// (more CORS-friendly than the RSS XML feed for this specific source)
+async function fetchSpreakerEpisodes(showId, limit = 5) {
+  const url = `https://api.spreaker.com/v2/shows/${showId}/episodes?limit=${limit}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Spreaker API: HTTP ' + res.status);
+  const json = await res.json();
+  const items = (json.response?.items || []).map(ep => ({
+    title: ep.title,
+    url: `https://api.spreaker.com/v2/episodes/${ep.episode_id}/play.mp3`,
+    pubDate: ep.published_at,
+  }));
+  if (!items.length) throw new Error('Spreaker API: אין פרקים');
+  return items;
+}
+
+// play news bulletin
+async function playNews() {
+  // save current state for resume after news
+  if (playerState.mode === 'podcast' && !audio.paused) {
+    playerState.beforeNews = {
+      mode: 'podcast',
+      rss: playerState.currentRss,
+      name: playerState.currentName,
+      position: audio.currentTime
+    };
+  } else {
+    playerState.beforeNews = null;
+  }
+
+  playerState.mode = 'loading';
+  syncUI();
+  showToast('מוריד מבזק אחרון...');
+
+  let episodes;
+  try {
+    episodes = await fetchSpreakerEpisodes(NEWS_SHOW_ID);
+  } catch(e) {
+    console.warn('[playNews] Spreaker API failed, trying RSS fallback:', e.message);
+    try {
+      episodes = await fetchRSS(NEWS_RSS);
+    } catch(e2) {
+      console.error('[playNews] RSS fetch also failed:', e2);
+      showToast('שגיאה בטעינת המבזק: ' + e2.message);
+      playerState.mode = 'idle';
+      syncUI();
+      return;
+    }
+  }
+
+  const latest = episodes[0];
+  playerState.newsEpisode = latest;
+  playerState.mode = 'news';
+  audio.src = latest.url;
+  audio.currentTime = 0;
+  try {
+    await audio.play();
+    syncUI();
+    showToast('מנגן: ' + latest.title);
+  } catch(e) {
+    console.error('[playNews] audio.play failed:', e);
+    showToast('שגיאת ניגון: ' + e.message);
+    playerState.mode = 'idle';
+    syncUI();
+  }
+}
+
+// play podcast from RSS url
+async function playPodcastRss(rssUrl, name, startTime = 0) {
+  playerState.mode = 'loading';
+  playerState.currentRss = rssUrl;
+  playerState.currentName = name;
+  syncUI();
+  showToast('טוען פודקאסט...');
+
+  let episodes;
+  try {
+    episodes = await fetchRSS(rssUrl);
+  } catch(e) {
+    console.error('[playPodcastRss] RSS fetch failed:', e);
+    showToast('שגיאה בטעינת ה-RSS: ' + e.message);
+    playerState.mode = 'idle';
+    syncUI();
+    return;
+  }
+
+  const latest = episodes[0];
+  playerState.mode = 'podcast';
+  audio.src = latest.url;
+  audio.currentTime = startTime;
+  try {
+    await audio.play();
+    syncUI();
+    showToast('מנגן: ' + latest.title);
+  } catch(e) {
+    console.error('[playPodcastRss] audio.play failed:', e);
+    showToast('שגיאת ניגון: ' + e.message);
+    playerState.mode = 'idle';
+    syncUI();
+  }
+}
+
+// play a radio-station slot: try today's RSS episode first, fall back to live stream
+function togglePlay() {
+  if (playerState.mode === 'loading') return;
+
+  if (!audio.paused) {
+    audio.pause();
+    if (playerState.hls) { playerState.hls.destroy(); playerState.hls = null; }
+    return;
+  }
+
+  // if audio is paused mid-track — just resume
+  if (audio.src && audio.currentTime > 0 && playerState.mode !== 'idle') {
+    audio.play();
+    return;
+  }
+
+  // nothing loaded — play current scheduled slot (this is "in schedule", not an override)
+  playerState.manualOverride = false;
+  const slot = getSlot(new Date().getHours(), 0);
+  playSlot(slot);
+}
+
+// ── HOURLY NEWS TRIGGER ──
+let lastNewsHour = -1;
+function checkHourlyNews() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  // trigger at :00 (first minute of the hour)
+  if (m === 0 && h !== lastNewsHour && S.playing && S.newsFreq > 0) {
+    if (h % S.newsFreq === 0) {
+      lastNewsHour = h;
+      playNews();
+    }
+  }
+}
+setInterval(checkHourlyNews, 15000);
+
+// ── TOAST ──
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-family:sans-serif;z-index:9999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+// ── MEDIA SESSION (for lock screen controls) ──
+function updateMediaSession(title, artist) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'חפיצים: רדיו' });
+  navigator.mediaSession.setActionHandler('play', () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+}
+
+// ── INIT ──
+document.querySelectorAll('.theme-view').forEach(v=>v.classList.remove('active'));
+document.getElementById('theme-'+currentTheme).classList.add('active');
+(() => {
+  const gts = document.getElementById('global-theme-switcher');
+  if (gts) {
+    gts.className = 'skin-' + currentTheme;
+    ['a','b','c'].forEach(k => {
+      const btn = document.getElementById('gts-' + k);
+      if (btn) btn.classList.toggle('active', k === currentTheme);
+    });
+  }
+})();
+updateModal(); renderAll();
+</script>
+</body>
+</html>
